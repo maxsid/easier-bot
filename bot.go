@@ -11,26 +11,36 @@ import (
 
 // Bot  is the main object of the bot.
 type Bot struct {
-	API      *tgbotapi.BotAPI
-	Handlers *MessagesHandlers
-	config   Configurator
-	updates  tgbotapi.UpdatesChannel
+	API         *tgbotapi.BotAPI
+	Handlers    *MessagesHandlers
+	updates     tgbotapi.UpdatesChannel
+	isWebhook   bool
+	listenAddr  string
+	webhookSite string
 }
 
 // NewBot is constructor of the Bot structure
-func NewBot(config Configurator) *Bot {
-	api, err := tgbotapi.NewBotAPI(config.GetToken())
+func NewBot(token string, debug bool) *Bot {
+	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panicf("Error of api starting: %v\n", err)
 	}
-	api.Debug = config.IsDebug()
+	api.Debug = debug
 	log.Printf("Authorized on account %s", api.Self.UserName)
-	return &Bot{config: config, API: api, Handlers: NewMessagesHandlers()}
+	return &Bot{API: api, Handlers: NewMessagesHandlers()}
+}
+
+func NewBotViaWebhook(token, webhookSite, listenAddr string, debug bool) *Bot {
+	bot := NewBot(token, debug)
+	bot.isWebhook = true
+	bot.listenAddr = listenAddr
+	bot.webhookSite = webhookSite
+	return bot
 }
 
 // RunBotServer runs listening webhook and updates. It needs running after set handlers.
 func (bot *Bot) RunBotServer() {
-	if bot.config.IsWebhookMode() {
+	if bot.isWebhook {
 		bot.setupWebhookMode()
 	} else {
 		bot.setupPushMode()
@@ -54,15 +64,15 @@ func (bot *Bot) setupPushMode() {
 
 // setupWebhookMode starts webserver for Telegram API webhook.
 func (bot *Bot) setupWebhookMode() {
-	webhookURL := fmt.Sprintf("%s/%s", bot.config.GetWebhookSite(), bot.API.Token)
+	webhookURL := fmt.Sprintf("%s/%s", bot.webhookSite, bot.API.Token)
 	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(webhookURL))
 	if err != nil {
 		log.Panicf("SetupWebhook error: %v\n", err)
 	}
 	bot.updates = bot.API.ListenForWebhook("/" + bot.API.Token)
-	log.Printf("Starting to listen %s for webhook requests.", bot.config.GetListenAddress())
+	log.Printf("Starting to listen %s for webhook requests.", bot.listenAddr)
 	go func() {
-		err := http.ListenAndServe(bot.config.GetListenAddress(), nil)
+		err := http.ListenAndServe(bot.listenAddr, nil)
 		if err != nil {
 			log.Panicf("Listening webhook error: %v\n", err)
 		}

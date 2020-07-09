@@ -8,7 +8,9 @@ import (
 
 func main() {
 	config := NewConfig(true)
-	bot := easierbot.NewBot(config)
+	bot := easierbot.NewBotViaWebhook(config.token, config.webhookSite, config.listenAddress, config.isDebug)
+	// or
+	// bot := easierbot.NewBot(config.token, config.isDebug)
 	bot.Handlers.AddSeveralCommandsHandler([]string{"hello", "start", "hi"}, func(bot *easierbot.Bot, msg *tgbotapi.Message) {
 		bot.SendMessage(msg.Chat.ID, "Hello World!")
 	})
@@ -24,32 +26,11 @@ func main() {
 type Config struct {
 	token         string
 	isDebug       bool
-	isWebhookMode bool
 	webhookSite   string
 	listenAddress string
 }
 
 func NewConfig(isDebug bool) *Config {
-	return &Config{token: os.Getenv("TOKEN"), isDebug: isDebug, isWebhookMode: true,
+	return &Config{token: os.Getenv("TOKEN"), isDebug: isDebug,
 		webhookSite: os.Getenv("WEBHOOK_SITE"), listenAddress: os.Getenv("LISTEN_ADDRESS")}
-}
-
-func (c Config) GetToken() string {
-	return c.token
-}
-
-func (c Config) IsDebug() bool {
-	return c.isDebug
-}
-
-func (c Config) IsWebhookMode() bool {
-	return c.isWebhookMode
-}
-
-func (c Config) GetWebhookSite() string {
-	return c.webhookSite
-}
-
-func (c Config) GetListenAddress() string {
-	return c.listenAddress
 }
