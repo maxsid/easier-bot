@@ -13,7 +13,7 @@ import (
 type Bot struct {
 	API         *tgbotapi.BotAPI
 	Handlers    *MessagesHandlers
-	Data        *interface{} // this attribute is for data storage
+	Data        interface{} // this attribute is for data storage
 	updates     tgbotapi.UpdatesChannel
 	isWebhook   bool
 	listenAddr  string
