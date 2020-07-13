@@ -1,6 +1,8 @@
 package easierbot
 
 import (
+	"github.com/maxsid/easier-bot/contentType"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -10,13 +12,16 @@ import (
 // MessagesHandlers contains all handlers of messages
 type MessagesHandlers struct {
 	commandHandlers map[string]MessageHandler // contains handlers which calls with an exact command match
-	regexpHandlers  []regexpMessageHandler
+	regexpHandlers  []*regexpMessageHandler
+	contentHandlers map[contentType.ContentType]MessageHandler
+	defaultHandler  MessageHandler
 }
 
 func NewMessagesHandlers() *MessagesHandlers {
 	return &MessagesHandlers{
 		commandHandlers: make(map[string]MessageHandler),
-		regexpHandlers:  make([]regexpMessageHandler, 0),
+		regexpHandlers:  make([]*regexpMessageHandler, 0),
+		contentHandlers: make(map[contentType.ContentType]MessageHandler),
 	}
 }
 
@@ -27,7 +32,8 @@ func (h *MessagesHandlers) checkCall(bot *Bot, msg *tgbotapi.Message) {
 	}
 	// check command
 	if msg.IsCommand() {
-		handler, ok := h.commandHandlers[msg.Command()]
+		lowerCommand := strings.ToLower(msg.Command())
+		handler, ok := h.commandHandlers[lowerCommand]
 		if ok {
 			handler(bot, msg)
 			return
@@ -41,6 +47,38 @@ func (h *MessagesHandlers) checkCall(bot *Bot, msg *tgbotapi.Message) {
 			return
 		}
 	}
+	// content handlers
+	if ct := getContentType(h, msg); ct != contentType.NoContent {
+		h.contentHandlers[ct](bot, msg)
+		return
+	}
+	// other handlers
+	if h.defaultHandler != nil {
+		h.defaultHandler(bot, msg)
+	}
+}
+
+func getContentType(h *MessagesHandlers, msg *tgbotapi.Message) contentType.ContentType {
+	elemValue := reflect.ValueOf(msg).Elem()
+	typeOf := elemValue.Type()
+	canBeAny := false
+	for i := 0; i < elemValue.NumField(); i++ {
+		ct := contentType.ContentType(typeOf.Field(i).Name)
+		// check field in all possible types and the filed value is not nil
+		if _, hasInAll := contentType.AllContentTypes[ct]; !hasInAll || elemValue.Field(i).IsNil() {
+			continue
+		}
+		// if it went here, it can have any content
+		canBeAny = true
+		// check field in set content handlers and
+		if _, hasInHandlers := h.contentHandlers[ct]; hasInHandlers {
+			return ct
+		}
+	}
+	if _, hasAnyInHandlers := h.contentHandlers[contentType.Any]; hasAnyInHandlers && canBeAny {
+		return contentType.Any
+	}
+	return contentType.NoContent
 }
 
 // AddSeveralCommandsHandler sets a handler under several commands.
@@ -54,15 +92,24 @@ func (h *MessagesHandlers) AddSeveralCommandsHandler(commands []string, handler 
 // AddCommandHandler sets a handler under a command.
 // The handler runs when the update listener got this command.
 func (h *MessagesHandlers) AddCommandHandler(command string, handler MessageHandler) {
-	h.commandHandlers[command] = handler
+	lowerCommand := strings.ToLower(command)
+	h.commandHandlers[lowerCommand] = handler
 }
 
 // AddRegexpHandler sets a handler under a regular expression.
 // The handler runs when the update listener got this text which has a regexp match.
 func (h *MessagesHandlers) AddRegexpHandler(expr string, handler MessageHandler) {
-	expr = strings.ToLower(expr)
-	reMsgHandler := regexpMessageHandler{regexp.MustCompile(expr), handler}
-	h.regexpHandlers = append(h.regexpHandlers, reMsgHandler)
+	h.regexpHandlers = append(h.regexpHandlers, newRegexpMessageHandler(expr, handler))
+}
+
+// SetContentHandler sets handler which will be executed if a message has another type of content.
+func (h *MessagesHandlers) SetContentHandler(contentType contentType.ContentType, handler MessageHandler) {
+	h.contentHandlers[contentType] = handler
+}
+
+// SetDefaultHandler sets handler which will be executed in other cases.
+func (h *MessagesHandlers) SetDefaultHandler(handler MessageHandler) {
+	h.defaultHandler = handler
 }
 
 // MessageHandler is a function for handling a bot message
@@ -72,4 +119,9 @@ type MessageHandler func(bot *Bot, msg *tgbotapi.Message)
 type regexpMessageHandler struct {
 	regexp  *regexp.Regexp
 	handler MessageHandler
+}
+
+// newRegexpMessageHandler is constructor of regexpMessageHandler
+func newRegexpMessageHandler(expr string, handler MessageHandler) *regexpMessageHandler {
+	return &regexpMessageHandler{regexp.MustCompile(expr), handler}
 }
