@@ -192,7 +192,7 @@ func TestMessagesHandlers_checkCall(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lastResult = -1
-			tt.handlers.checkCall(nil, tt.msg)
+			tt.handlers.runHandlerByMessage(nil, tt.msg)
 			if tt.want != lastResult {
 				t.Errorf("lastResult = %v, want %v", lastResult, tt.want)
 			}

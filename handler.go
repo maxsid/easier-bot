@@ -25,11 +25,12 @@ func NewMessagesHandlers() *MessagesHandlers {
 	}
 }
 
-// checkCall checks a message and execute an appropriate handler
-func (h *MessagesHandlers) checkCall(bot *Bot, msg *tgbotapi.Message) {
+// runHandlerByMessage checks a message and execute an appropriate handler
+func (h *MessagesHandlers) runHandlerByMessage(bot *Bot, msg *tgbotapi.Message) {
 	if msg == nil {
 		return
 	}
+	defer panicRecover()
 	// check command
 	if msg.IsCommand() {
 		lowerCommand := strings.ToLower(msg.Command())
@@ -58,6 +59,7 @@ func (h *MessagesHandlers) checkCall(bot *Bot, msg *tgbotapi.Message) {
 	}
 }
 
+// getContentType looks for not text content in a message and returns its type.
 func getContentType(h *MessagesHandlers, msg *tgbotapi.Message) contentType.ContentType {
 	elemValue := reflect.ValueOf(msg).Elem()
 	typeOf := elemValue.Type()

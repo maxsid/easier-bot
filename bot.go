@@ -99,7 +99,7 @@ func (bot *Bot) deleteWebhook() {
 func (bot *Bot) logWebhookInfo() {
 	info, err := bot.API.GetWebhookInfo()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	if info.LastErrorDate != 0 {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
@@ -110,6 +110,6 @@ func (bot *Bot) logWebhookInfo() {
 func (bot *Bot) listenUpdates() {
 	log.Println("Waiting messages...")
 	for update := range bot.updates {
-		go bot.Handlers.checkCall(bot, update.Message)
+		go bot.Handlers.runHandlerByMessage(bot, update.Message)
 	}
 }
