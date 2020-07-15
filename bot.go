@@ -99,7 +99,7 @@ func (bot *Bot) deleteWebhook() {
 func (bot *Bot) logWebhookInfo() {
 	info, err := bot.API.GetWebhookInfo()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	if info.LastErrorDate != 0 {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)

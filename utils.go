@@ -12,6 +12,6 @@ func (bot *Bot) SendMessage(chatID int64, message string) {
 	msg := tgbotapi.NewMessage(chatID, message)
 	_, err := bot.API.Send(msg)
 	if err != nil {
-		log.Fatalf("Send Messsage Error: %v\n", err)
+		log.Panicf("Send Messsage Error: %v\n", err)
 	}
 }
