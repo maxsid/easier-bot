@@ -110,6 +110,6 @@ func (bot *Bot) logWebhookInfo() {
 func (bot *Bot) listenUpdates() {
 	log.Println("Waiting messages...")
 	for update := range bot.updates {
-		go bot.Handlers.checkCall(bot, update.Message)
+		go bot.Handlers.runHandlerByMessage(bot, update.Message)
 	}
 }

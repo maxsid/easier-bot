@@ -25,8 +25,8 @@ func NewMessagesHandlers() *MessagesHandlers {
 	}
 }
 
-// checkCall checks a message and execute an appropriate handler
-func (h *MessagesHandlers) checkCall(bot *Bot, msg *tgbotapi.Message) {
+// runHandlerByMessage checks a message and execute an appropriate handler
+func (h *MessagesHandlers) runHandlerByMessage(bot *Bot, msg *tgbotapi.Message) {
 	if msg == nil {
 		return
 	}
