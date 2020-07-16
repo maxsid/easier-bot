@@ -11,13 +11,14 @@ import (
 
 // Bot  is the main object of the bot.
 type Bot struct {
-	API         *tgbotapi.BotAPI
-	Handlers    *MessagesHandlers
-	Data        interface{} // this attribute is for data storage
-	updates     tgbotapi.UpdatesChannel
-	isWebhook   bool
-	listenAddr  string
-	webhookSite string
+	API              *tgbotapi.BotAPI
+	Handlers         *MessagesHandlers
+	Data             interface{} // this attribute is for data storage
+	MessageParseMode string
+	updates          tgbotapi.UpdatesChannel
+	isWebhook        bool
+	listenAddr       string
+	webhookSite      string
 }
 
 // NewBot is constructor of the Bot structure
@@ -28,7 +29,7 @@ func NewBot(token string, debug bool) *Bot {
 	}
 	api.Debug = debug
 	log.Printf("Authorized on account %s", api.Self.UserName)
-	return &Bot{API: api, Handlers: NewMessagesHandlers()}
+	return &Bot{API: api, Handlers: NewMessagesHandlers(), MessageParseMode: "MarkdownV2"}
 }
 
 func NewBotViaWebhook(token, webhookSite, listenAddr string, debug bool) *Bot {

@@ -10,6 +10,7 @@ import (
 func (bot *Bot) SendMessage(chatID int64, message string) {
 	log.Printf("Send '%s' to %d chat id\n", message, chatID)
 	msg := tgbotapi.NewMessage(chatID, message)
+	msg.ParseMode = bot.MessageParseMode
 	_, err := bot.API.Send(msg)
 	if err != nil {
 		log.Panicf("Send Messsage Error: %v\n", err)
