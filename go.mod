@@ -1,4 +1,4 @@
-module github.com/maxsid/easier-bot
+module github.com/maxsid/hand-tbot
 
 go 1.14
 

@@ -1,8 +1,8 @@
-package easierbot
+package handtbot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/maxsid/easier-bot/contentType"
+	"github.com/maxsid/hand-tbot/contentType"
 	"testing"
 )
 

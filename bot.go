@@ -1,4 +1,4 @@
-package easierbot
+package handtbot
 
 import (
 	"fmt"

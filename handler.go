@@ -1,7 +1,7 @@
-package easierbot
+package handtbot
 
 import (
-	"github.com/maxsid/easier-bot/contentType"
+	"github.com/maxsid/hand-tbot/contentType"
 	"reflect"
 	"regexp"
 	"strings"
